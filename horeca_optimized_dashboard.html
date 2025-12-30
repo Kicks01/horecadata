@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل بيانات Horeca الشامل - لوحة التحكم المتقدمة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+            color: #fafafa;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #fafafa;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a1a1aa;
+            font-size: 1.1rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-card h3 {
+            color: #a1a1aa;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            color: #fafafa;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .segment-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .segment-header h2 {
+            color: #fafafa;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .customers-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .customers-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .customers-table thead {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .customers-table th {
+            padding: 15px;
+            text-align: right;
+            color: #fafafa;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .customers-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #e4e4e7;
+            font-size: 0.9rem;
+        }
+
+        .customers-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 لوحة التحكم الشاملة لبيانات Horeca</h1>
+            <p>تحليل متقدم للعملاء والمناطق والمدن</p>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <h3>إجمالي العملاء</h3>
+                <div class="value" id="totalCustomers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>إجمالي المبيعات (GMV)</h3>
+                <div class="value" id="totalGMV">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>إجمالي الطلبات</h3>
+                <div class="value" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>المنتجات الفريدة</h3>
+                <div class="value" id="uniqueProducts">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>العلامات التجارية</h3>
+                <div class="value" id="uniqueBrands">0</div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <h3>متوسط GMV لكل عميل</h3>
+                <div class="value" id="avgGMV">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>متوسط الطلبات لكل عميل</h3>
+                <div class="value" id="avgOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>إجمالي المنتجات (مع التكرار)</h3>
+                <div class="value" id="totalItems">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>عدد المناطق</h3>
+                <div class="value" id="totalAreas">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>عدد المدن</h3>
+                <div class="value" id="totalCities">0</div>
+            </div>
+        </div>
+<div class="segment-section">
+            <div class="segment-header">
+                <h2>📈 توزيع العملاء حسب التصنيف</h2>
+            </div>
+            <div id="segmentDistribution" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+            </div>
+        </div>
+        <div class="segment-section">
+            <div class="segment-header">
+                <h2>🏙️ تحليل العملاء حسب المدينة</h2>
+            </div>
+            <div class="customers-table-container">
+                <table class="customers-table">
+                    <thead>
+                        <tr>
+                            <th>المدينة</th>
+                            <th>عدد العملاء</th>
+                            <th>إجمالي GMV</th>
+                            <th>متوسط GMV</th>
+                            <th>التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="citiesTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="citiesPaginationContainer" style="display: flex; justify-content: center; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);"></div>
+        </div>
+
+        <div class="segment-section">
+            <div class="segment-header">
+                <h2>📍 تحليل العملاء حسب المنطقة</h2>
+            </div>
+            <div class="customers-table-container">
+                <table class="customers-table">
+                    <thead>
+                        <tr>
+                            <th>المنطقة</th>
+                            <th>عدد العملاء</th>
+                            <th>إجمالي GMV</th>
+                            <th>متوسط GMV</th>
+                            <th>التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="areasTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="areasPaginationContainer" style="display: flex; justify-content: center; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);"></div>
+        </div>
+
+        <div class="segment-section">
+            <div class="segment-header">
+                <h2>👥 قائمة جميع العملاء</h2>
+            </div>
+            <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="text" class="search-input" id="customerSearch" placeholder="🔍 ابحث عن العميل..." style="flex: 1; min-width: 250px; padding: 12px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fafafa; font-size: 0.9rem; font-family: 'Cairo', sans-serif;">
+            </div>
+            <div class="customers-table-container">
+                <table class="customers-table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>اسم العميل</th>
+                            <th>التصنيف</th>
+                            <th>الهاتف</th>
+                            <th>النوع</th>
+                            <th>المدينة</th>
+                            <th>المنطقة</th>
+                            <th>إجمالي GMV</th>
+                            <th>الطلبات</th>
+                            <th>التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="paginationContainer" style="display: flex; justify-content: center; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== DATA VARIABLES ==========
+        let customersData = [];
+        let groupedByArea = {};
+        let groupedByCity = {};
+        let segments = {};
+        let filteredData = [];
+        let currentPage = 1;
+        let currentCityPage = 1;
+        let currentAreaPage = 1;
+        const itemsPerPage = 20;
+        const citiesPerPage = 15;
+        const areasPerPage = 15;
+
+        // ========== INITIALIZATION ==========
+        async function loadData() {
+            try {
+                const response = await fetch('dashboard_data.json');
+                if (!response.ok) {
+                    console.error('Failed to load JSON:', response.statusText);
+                    return false;
+                }
+                const data = await response.json();
+                if (data.customers && Array.isArray(data.customers)) {
+                    window.customersData = data.customers;
+                    return true;
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+            return false;
+        }
+
+        async function initialize() {
+            const loaded = await loadData();
+            if (loaded && window.customersData && window.customersData.length > 0) {
+                initializeData();
+                updateStatistics();
+                renderAll();
+                console.log('Dashboard initialized with', customersData.length, 'customers');
+            } else {
+                console.error('Failed to initialize dashboard');
+            }
+        }
+
+        function initializeData() {
+            customersData = [];
+            
+            // Load customers from the fetched data
+            if (window.customersData && Array.isArray(window.customersData)) {
+                customersData = window.customersData.map(customer => {
+                    // Ensure segment color exists
+                    if (!customer.segment_color) {
+                        const colorMap = {
+                            'Premium': '#4ade80',
+                            'Standard': '#fbbf24',
+                            'Low': '#f87171'
+                        };
+                        customer.segment_color = colorMap[customer.segment] || '#a1a1aa';
+                    }
+                    return customer;
+                });
+            }
+            
+            console.log('Total customers loaded:', customersData.length);
+
+            // Group by area
+            customersData.forEach(customer => {
+                if (!groupedByArea[customer.area]) {
+                    groupedByArea[customer.area] = {
+                        area: customer.area,
+                        customers: [],
+                        total_gmv: 0,
+                        customer_count: 0
+                    };
+                }
+                groupedByArea[customer.area].customers.push(customer);
+                groupedByArea[customer.area].total_gmv += customer.total_gmv;
+                groupedByArea[customer.area].customer_count++;
+            });
+
+            // Group by city
+            customersData.forEach(customer => {
+                if (!groupedByCity[customer.city]) {
+                    groupedByCity[customer.city] = {
+                        city: customer.city,
+                        customers: [],
+                        total_gmv: 0,
+                        customer_count: 0
+                    };
+                }
+                groupedByCity[customer.city].customers.push(customer);
+                groupedByCity[customer.city].total_gmv += customer.total_gmv;
+                groupedByCity[customer.city].customer_count++;
+            });
+
+            // Group by segment
+            customersData.forEach(customer => {
+                if (!segments[customer.segment]) {
+                    segments[customer.segment] = {
+                        name: customer.segment,
+                        count: 0,
+                        gmv: 0,
+                        color: customer.segment_color
+                    };
+                }
+                segments[customer.segment].count++;
+                segments[customer.segment].gmv += customer.total_gmv;
+            });
+
+            filteredData = [...customersData];
+        }
+
+        function updateStatistics() {
+            const totalCustomers = customersData.length;
+            const totalGMV = customersData.reduce((sum, c) => sum + c.total_gmv, 0);
+            const totalOrders = customersData.reduce((sum, c) => sum + c.unique_orders, 0);
+            const totalItems = customersData.reduce((sum, c) => sum + c.item_count, 0);
+
+            const allProducts = new Set();
+            const allBrands = new Set();
+
+            customersData.forEach(customer => {
+                Object.keys(customer.products || {}).forEach(p => allProducts.add(p));
+                Object.keys(customer.brands || {}).forEach(b => allBrands.add(b));
+            });
+
+            document.getElementById('totalCustomers').textContent = totalCustomers.toLocaleString('ar');
+            document.getElementById('totalGMV').textContent = totalGMV.toLocaleString('ar') + ' EGP';
+            document.getElementById('totalOrders').textContent = totalOrders.toLocaleString('ar');
+            document.getElementById('uniqueProducts').textContent = allProducts.size.toLocaleString('ar');
+            document.getElementById('uniqueBrands').textContent = allBrands.size.toLocaleString('ar');
+            document.getElementById('avgGMV').textContent = Math.round(totalGMV / totalCustomers).toLocaleString('ar') + ' EGP';
+            document.getElementById('avgOrders').textContent = (totalOrders / totalCustomers).toFixed(1);
+            document.getElementById('totalItems').textContent = totalItems.toLocaleString('ar');
+            document.getElementById('totalAreas').textContent = Object.keys(groupedByArea).length.toLocaleString('ar');
+            document.getElementById('totalCities').textContent = Object.keys(groupedByCity).length.toLocaleString('ar');
+        }
+
+        function renderAll() {
+            renderCityGroupsTable();
+            renderAreaGroupsTable();
+            renderSegmentDistribution();
+            renderCustomersTable();
+        }
+
+        // ========== RENDERING FUNCTIONS ==========
+        function renderCityGroupsTable() {
+            const tbody = document.getElementById('citiesTableBody');
+            tbody.innerHTML = '';
+
+            const cities = Object.values(groupedByCity).sort((a, b) => b.total_gmv - a.total_gmv);
+            const start = (currentCityPage - 1) * citiesPerPage;
+            const end = start + citiesPerPage;
+            const pageData = cities.slice(start, end);
+
+            pageData.forEach((city, idx) => {
+                const globalIdx = start + idx;
+                const row = document.createElement('tr');
+                row.id = `city-row-${globalIdx}`;
+                const avgGMV = Math.round(city.total_gmv / city.customer_count);
+                row.innerHTML = `
+                    <td>${city.city}</td>
+                    <td>${city.customer_count}</td>
+                    <td>${city.total_gmv.toLocaleString('ar')} EGP</td>
+                    <td>${avgGMV.toLocaleString('ar')} EGP</td>
+                    <td><button onclick="toggleCityDetails(${globalIdx})" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: 'Cairo', sans-serif;">عرض</button></td>
+                `;
+                tbody.appendChild(row);
+
+                // Create detail row (hidden by default)
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'detail-row';
+                detailRow.id = `city-detail-${globalIdx}`;
+                detailRow.style.cssText = 'display: none; background: rgba(255, 255, 255, 0.02);';
+
+                const customersList = city.customers
+                    .sort((a, b) => b.total_gmv - a.total_gmv)
+                    .slice(0, 50);
+
+                const customersHtml = customersList.map(customer => `
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 12px 15px;">
+                            <div style="color: #fafafa; font-weight: 600;">${customer.name}</div>
+                            <div style="color: #71717a; font-size: 0.8rem; margin-top: 4px;">${customer.phone || 'غير متوفر'}</div>
+                        </td>
+                        <td style="padding: 12px 15px;">
+                            <span style="display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${customer.segment_color}20; color: ${customer.segment_color};">● ${customer.segment || 'N/A'}</span>
+                        </td>
+                        <td style="padding: 12px 15px; color: #fafafa; font-weight: 600;">${customer.total_gmv.toLocaleString('ar')} EGP</td>
+                        <td style="padding: 12px 15px; color: #fafafa;">${customer.unique_orders || 0}</td>
+                        <td style="padding: 12px 15px; color: #a1a1aa; font-size: 0.85rem;">${customer.type || 'N/A'}</td>
+                    </tr>
+                `).join('');
+
+                detailRow.innerHTML = `
+                    <td colspan="5" style="padding: 20px;">
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: hidden;">
+                            <div style="padding: 15px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="color: #fafafa; font-weight: 600; font-size: 1rem; margin-bottom: 5px;">👥 عملاء ${city.city} (${city.customer_count} عميل)</h4>
+                                <p style="color: #a1a1aa; font-size: 0.85rem;">إجمالي GMV: ${city.total_gmv.toLocaleString('ar')} EGP | متوسط GMV: ${avgGMV.toLocaleString('ar')} EGP</p>
+                            </div>
+                            <div class="customers-table-container">
+                                <table class="customers-table" style="margin: 0;">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم العميل</th>
+                                            <th>التصنيف</th>
+                                            <th>إجمالي GMV</th>
+                                            <th>الطلبات</th>
+                                            <th>النوع</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${customersHtml}
+                                        ${city.customer_count > 50 ? `<tr><td colspan="5" style="text-align: center; padding: 15px; color: #a1a1aa; font-size: 0.85rem;">... و ${city.customer_count - 50} عميل آخر</td></tr>` : ''}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailRow);
+            });
+
+            renderCitiesPagination();
+        }
+
+        function renderAreaGroupsTable() {
+            const tbody = document.getElementById('areasTableBody');
+            tbody.innerHTML = '';
+
+            const areas = Object.values(groupedByArea).sort((a, b) => b.total_gmv - a.total_gmv);
+            const start = (currentAreaPage - 1) * areasPerPage;
+            const end = start + areasPerPage;
+            const pageData = areas.slice(start, end);
+
+            pageData.forEach((area, idx) => {
+                const globalIdx = start + idx;
+                const row = document.createElement('tr');
+                row.id = `area-row-${globalIdx}`;
+                const avgGMV = Math.round(area.total_gmv / area.customer_count);
+                row.innerHTML = `
+                    <td>${area.area}</td>
+                    <td>${area.customer_count}</td>
+                    <td>${area.total_gmv.toLocaleString('ar')} EGP</td>
+                    <td>${avgGMV.toLocaleString('ar')} EGP</td>
+                    <td><button onclick="toggleAreaDetails(${globalIdx})" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: 'Cairo', sans-serif;">عرض</button></td>
+                `;
+                tbody.appendChild(row);
+
+                // Create detail row (hidden by default)
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'detail-row';
+                detailRow.id = `area-detail-${globalIdx}`;
+                detailRow.style.cssText = 'display: none; background: rgba(255, 255, 255, 0.02);';
+
+                const customersList = area.customers
+                    .sort((a, b) => b.total_gmv - a.total_gmv)
+                    .slice(0, 50);
+
+                const customersHtml = customersList.map(customer => `
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 12px 15px;">
+                            <div style="color: #fafafa; font-weight: 600;">${customer.name}</div>
+                            <div style="color: #71717a; font-size: 0.8rem; margin-top: 4px;">${customer.phone || 'غير متوفر'}</div>
+                        </td>
+                        <td style="padding: 12px 15px;">
+                            <span style="display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${customer.segment_color}20; color: ${customer.segment_color};">● ${customer.segment || 'N/A'}</span>
+                        </td>
+                        <td style="padding: 12px 15px; color: #fafafa; font-weight: 600;">${customer.total_gmv.toLocaleString('ar')} EGP</td>
+                        <td style="padding: 12px 15px; color: #fafafa;">${customer.unique_orders || 0}</td>
+                        <td style="padding: 12px 15px; color: #a1a1aa; font-size: 0.85rem;">${customer.type || 'N/A'}</td>
+                    </tr>
+                `).join('');
+
+                detailRow.innerHTML = `
+                    <td colspan="5" style="padding: 20px;">
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; overflow: hidden;">
+                            <div style="padding: 15px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="color: #fafafa; font-weight: 600; font-size: 1rem; margin-bottom: 5px;">👥 عملاء ${area.area} (${area.customer_count} عميل)</h4>
+                                <p style="color: #a1a1aa; font-size: 0.85rem;">إجمالي GMV: ${area.total_gmv.toLocaleString('ar')} EGP | متوسط GMV: ${avgGMV.toLocaleString('ar')} EGP</p>
+                            </div>
+                            <div class="customers-table-container">
+                                <table class="customers-table" style="margin: 0;">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم العميل</th>
+                                            <th>التصنيف</th>
+                                            <th>إجمالي GMV</th>
+                                            <th>الطلبات</th>
+                                            <th>النوع</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${customersHtml}
+                                        ${area.customer_count > 50 ? `<tr><td colspan="5" style="text-align: center; padding: 15px; color: #a1a1aa; font-size: 0.85rem;">... و ${area.customer_count - 50} عميل آخر</td></tr>` : ''}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailRow);
+            });
+
+            renderAreasPagination();
+        }
+
+        function renderSegmentDistribution() {
+            const container = document.getElementById('segmentDistribution');
+            container.innerHTML = '';
+
+            Object.values(segments)
+                .sort((a, b) => b.count - a.count)
+                .forEach(segment => {
+                    const percentage = (segment.count / customersData.length * 100).toFixed(1);
+                    const card = document.createElement('div');
+                    card.style.cssText = `
+                        background: rgba(255, 255, 255, 0.03);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 12px;
+                        padding: 20px;
+                        transition: all 0.3s ease;
+                    `;
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                <div style="width: 20px; height: 20px; background: ${segment.color}; border-radius: 4px;"></div>
+                                <label style="color: #a1a1aa; font-size: 0.8rem; font-weight: 600;">${segment.name}</label>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: #fafafa; font-weight: 700; font-size: 1.1rem;">${segment.count}</div>
+                                <div style="color: #60a5fa; font-weight: 600; font-size: 0.85rem;">${percentage}%</div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+        }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTableBody');
+            tbody.innerHTML = '';
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            pageData.forEach((customer, idx) => {
+                const globalIdx = start + idx;
+                const row = document.createElement('tr');
+                row.id = `row-${globalIdx}`;
+                
+                row.innerHTML = `
+                    <td>${customer.name}</td>
+                    <td><span style="display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${customer.segment_color}20; color: ${customer.segment_color};">● ${customer.segment || 'N/A'}</span></td>
+                    <td>${customer.phone || 'غير متوفر'}</td>
+                    <td>${customer.type || 'N/A'}</td>
+                    <td>${customer.city}</td>
+                    <td>${customer.area}</td>
+                    <td>${customer.total_gmv.toLocaleString('ar')} EGP</td>
+                    <td>${customer.unique_orders || 0}</td>
+                    <td><button class="toggle-details" onclick="toggleDetails(${globalIdx})" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: 'Cairo', sans-serif;">عرض</button></td>
+                `;
+                tbody.appendChild(row);
+
+                // Create detail row (hidden by default)
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'detail-row';
+                detailRow.id = `detail-${globalIdx}`;
+                detailRow.style.cssText = 'display: none; background: rgba(255, 255, 255, 0.02);';
+
+                const productsArray = Object.entries(customer.products || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15);
+
+                const brandsArray = Object.entries(customer.brands || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15);
+
+                const ordersArray = (customer.orders || []).slice(0, 30);
+
+                const productsHtml = productsArray
+                    .map(([prod, count]) => `
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.8rem; margin-bottom: 8px;">
+                            <div style="color: #fafafa; font-weight: 600; margin-bottom: 3px;">${prod}</div>
+                            <div style="color: #60a5fa; font-size: 0.75rem;">عدد الطلبات: ${count}</div>
+                        </div>
+                    `).join('');
+
+                const brandsHtml = brandsArray
+                    .map(([brand, count]) => `
+                        <div style="background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.8rem; margin-bottom: 8px;">
+                            <div style="color: #fafafa; font-weight: 600; margin-bottom: 3px;">${brand}</div>
+                            <div style="color: #4ade80; font-size: 0.75rem;">عدد الطلبات: ${count}</div>
+                        </div>
+                    `).join('');
+
+                const ordersHtml = ordersArray
+                    .map((order, orderIdx) => `
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; margin-bottom: 15px; overflow: hidden;">
+                            <div class="order-header" onclick="toggleOrder(${globalIdx}, ${orderIdx})" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59, 130, 246, 0.1); cursor: pointer; border-left: 4px solid #60a5fa;">
+                                <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                                    <span style="color: #71717a; font-size: 0.8rem; font-weight: 600;">رقم الطلب:</span>
+                                    <span style="color: #fafafa; font-weight: 700;">${order.order_id || 'N/A'}</span>
+                                    <span style="color: #71717a; font-size: 0.8rem; font-weight: 600; margin-right: 20px;">التاريخ:</span>
+                                    <span style="color: #fafafa; font-weight: 700;">${order.date || 'N/A'}</span>
+                                </div>
+                                <div class="expand-arrow" id="arrow-${globalIdx}-${orderIdx}" style="color: #60a5fa; transition: transform 0.3s ease; font-size: 0.75rem;">▼</div>
+                            </div>
+                            <div class="order-items-container" id="items-${globalIdx}-${orderIdx}" style="display: none; padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(255, 255, 255, 0.01);">
+                                ${(order.items || []).map(item => `
+                                    <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 6px; margin-bottom: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 0.85rem; border-left: 3px solid rgba(59, 130, 246, 0.5);">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <div style="color: #71717a; font-size: 0.75rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;">المنتج</div>
+                                            <div style="color: #fafafa; font-weight: 600;">${item.product || 'N/A'}</div>
+                                        </div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <div style="color: #71717a; font-size: 0.75rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;">العلامة</div>
+                                            <div style="color: #fafafa; font-weight: 600;">${item.brand || 'N/A'}</div>
+                                        </div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <div style="color: #71717a; font-size: 0.75rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;">الكمية</div>
+                                            <div style="color: #fafafa; font-weight: 600;">${item.quantity || 0}</div>
+                                        </div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <div style="color: #71717a; font-size: 0.75rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;">السعر</div>
+                                            <div style="color: #fafafa; font-weight: 600;">${item.price || 0} EGP</div>
+                                        </div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <div style="color: #71717a; font-size: 0.75rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px;">الإجمالي</div>
+                                            <div style="color: #fafafa; font-weight: 600;">${(item.total || 0).toLocaleString('ar')} EGP</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+
+                detailRow.innerHTML = `
+                    <td colspan="9" style="padding: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                            <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">📋 بيانات العميل</h4>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">الاسم الكامل:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.name}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">التصنيف:</label>
+                                    <span style="color: ${customer.segment_color}; font-weight: 600;">● ${customer.segment || 'N/A'}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">رقم الهاتف:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.phone || 'غير متوفر'}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">المدينة:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.city}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">المنطقة:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.area}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">نوع العميل:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.type || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">💰 إحصائيات المبيعات</h4>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">إجمالي GMV:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.total_gmv.toLocaleString('ar')} EGP</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">عدد الطلبات:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.unique_orders || 0}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">عدد المنتجات:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.item_count || 0}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">متوسط قيمة الطلب:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${Math.round(customer.avg_order_value || 0).toLocaleString('ar')} EGP</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">منتجات فريدة:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.unique_products || 0}</span>
+                                </div>
+                                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                                    <label style="color: #71717a; font-size: 0.85rem;">علامات تجارية:</label>
+                                    <span style="color: #fafafa; font-weight: 600;">${customer.unique_brands || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 20px; overflow: hidden;">
+                            <div class="section-header" onclick="toggleSection(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.02);">
+                                <span style="color: #fafafa; font-weight: 600; font-size: 0.95rem;">🛍️ المنتجات المطلوبة (${productsArray.length})</span>
+                                <span class="section-toggle" style="color: #60a5fa; transition: transform 0.3s ease; font-size: 0.8rem;">▶</span>
+                            </div>
+                            <div class="section-content" style="padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: none;">
+                                ${productsHtml}
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 20px; overflow: hidden;">
+                            <div class="section-header" onclick="toggleSection(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.02);">
+                                <span style="color: #fafafa; font-weight: 600; font-size: 0.95rem;">🏷️ العلامات التجارية (${brandsArray.length})</span>
+                                <span class="section-toggle" style="color: #60a5fa; transition: transform 0.3s ease; font-size: 0.8rem;">▶</span>
+                            </div>
+                            <div class="section-content" style="padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: none;">
+                                ${brandsHtml}
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; margin-top: 20px; overflow: hidden;">
+                            <div class="section-header" onclick="toggleSection(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.02);">
+                                <span style="color: #fafafa; font-weight: 600; font-size: 0.95rem;">📦 سجل الطلبات (${customer.unique_orders || 0} طلب)</span>
+                                <span class="section-toggle" style="color: #60a5fa; transition: transform 0.3s ease; font-size: 0.8rem;">▶</span>
+                            </div>
+                            <div class="section-content" style="padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: none;">
+                                ${ordersHtml}
+                                ${customer.unique_orders > 30 ? `<div style="color: #a1a1aa; margin-top: 15px; font-size: 0.85rem;">... و ${customer.unique_orders - 30} طلب آخر</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailRow);
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← السابق';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCustomersTable(); } };
+            prevBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            container.appendChild(prevBtn);
+
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `الصفحة ${currentPage} من ${totalPages}`;
+            pageInfo.style.cssText = 'color: #a1a1aa; font-size: 0.9rem; padding: 8px 12px;';
+            container.appendChild(pageInfo);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'التالي →';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCustomersTable(); } };
+            nextBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            container.appendChild(nextBtn);
+        }
+
+        function renderCitiesPagination() {
+            const container = document.getElementById('citiesPaginationContainer');
+            container.innerHTML = '';
+            const cities = Object.values(groupedByCity);
+            const totalPages = Math.ceil(cities.length / citiesPerPage);
+
+            if (totalPages <= 1) return;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← السابق';
+            prevBtn.disabled = currentCityPage === 1;
+            prevBtn.onclick = () => { if (currentCityPage > 1) { currentCityPage--; renderCityGroupsTable(); } };
+            prevBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            if (prevBtn.disabled) prevBtn.style.opacity = '0.5';
+            container.appendChild(prevBtn);
+
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `الصفحة ${currentCityPage} من ${totalPages}`;
+            pageInfo.style.cssText = 'color: #a1a1aa; font-size: 0.9rem; padding: 8px 12px;';
+            container.appendChild(pageInfo);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'التالي →';
+            nextBtn.disabled = currentCityPage === totalPages;
+            nextBtn.onclick = () => { if (currentCityPage < totalPages) { currentCityPage++; renderCityGroupsTable(); } };
+            nextBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            if (nextBtn.disabled) nextBtn.style.opacity = '0.5';
+            container.appendChild(nextBtn);
+        }
+
+        function renderAreasPagination() {
+            const container = document.getElementById('areasPaginationContainer');
+            container.innerHTML = '';
+            const areas = Object.values(groupedByArea);
+            const totalPages = Math.ceil(areas.length / areasPerPage);
+
+            if (totalPages <= 1) return;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← السابق';
+            prevBtn.disabled = currentAreaPage === 1;
+            prevBtn.onclick = () => { if (currentAreaPage > 1) { currentAreaPage--; renderAreaGroupsTable(); } };
+            prevBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            if (prevBtn.disabled) prevBtn.style.opacity = '0.5';
+            container.appendChild(prevBtn);
+
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `الصفحة ${currentAreaPage} من ${totalPages}`;
+            pageInfo.style.cssText = 'color: #a1a1aa; font-size: 0.9rem; padding: 8px 12px;';
+            container.appendChild(pageInfo);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'التالي →';
+            nextBtn.disabled = currentAreaPage === totalPages;
+            nextBtn.onclick = () => { if (currentAreaPage < totalPages) { currentAreaPage++; renderAreaGroupsTable(); } };
+            nextBtn.style.cssText = 'background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: Cairo, sans-serif; transition: all 0.3s ease;';
+            if (nextBtn.disabled) nextBtn.style.opacity = '0.5';
+            container.appendChild(nextBtn);
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function toggleDetails(idx) {
+            const detailRow = document.getElementById(`detail-${idx}`);
+            if (detailRow) {
+                detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+            }
+        }
+
+        function toggleCityDetails(idx) {
+            const detailRow = document.getElementById(`city-detail-${idx}`);
+            if (detailRow) {
+                detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+            }
+        }
+
+        function toggleAreaDetails(idx) {
+            const detailRow = document.getElementById(`area-detail-${idx}`);
+            if (detailRow) {
+                detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+            }
+        }
+
+        function toggleOrder(customerIdx, orderIdx) {
+            const container = document.getElementById(`items-${customerIdx}-${orderIdx}`);
+            const arrow = document.getElementById(`arrow-${customerIdx}-${orderIdx}`);
+            if (container) {
+                container.style.display = container.style.display === 'none' ? 'block' : 'none';
+                if (arrow) {
+                    arrow.style.transform = container.style.display === 'none' ? 'rotate(0deg)' : 'rotate(180deg)';
+                }
+            }
+        }
+
+        function toggleSection(element) {
+            const section = element.closest('div[style*="border-radius"]');
+            const content = section.querySelector('.section-content');
+            const toggle = section.querySelector('.section-toggle');
+            if (content && toggle) {
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                toggle.style.transform = content.style.display === 'none' ? 'rotate(0deg)' : 'rotate(90deg)';
+            }
+        }
+
+        // ========== SEARCH FUNCTIONALITY ==========
+        document.getElementById('customerSearch').addEventListener('keyup', function(e) {
+            const value = e.target.value.toLowerCase();
+            filteredData = customersData.filter(customer =>
+                customer.name.toLowerCase().includes(value) ||
+                (customer.phone && customer.phone.toString().toLowerCase().includes(value)) ||
+                customer.city.toLowerCase().includes(value) ||
+                customer.area.toLowerCase().includes(value)
+            );
+            currentPage = 1;
+            renderCustomersTable();
+        });
+
+        // ========== PAGE LOAD ==========
+        initialize();
+    </script>
+</body>
+</html>
+
+
