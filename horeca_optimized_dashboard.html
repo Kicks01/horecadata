@@ -860,6 +860,8 @@
             const container = document.getElementById('paginationContainer');
             container.innerHTML = '';
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, filteredData.length);
 
             const prevBtn = document.createElement('button');
             prevBtn.textContent = '← السابق';
@@ -869,8 +871,8 @@
             container.appendChild(prevBtn);
 
             const pageInfo = document.createElement('span');
-            pageInfo.textContent = `الصفحة ${currentPage} من ${totalPages}`;
-            pageInfo.style.cssText = 'color: #a1a1aa; font-size: 0.9rem; padding: 8px 12px;';
+            pageInfo.textContent = `الصفحة ${currentPage} من ${totalPages} | العملاء ${start}-${end} من ${filteredData.length}`;
+            pageInfo.style.cssText = 'color: #a1a1aa; font-size: 0.9rem; padding: 8px 12px; font-weight: 500;';
             container.appendChild(pageInfo);
 
             const nextBtn = document.createElement('button');
