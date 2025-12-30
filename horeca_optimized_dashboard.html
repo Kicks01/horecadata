@@ -293,18 +293,60 @@
         // ========== INITIALIZATION ==========
         async function loadData() {
             try {
-                const response = await fetch('dashboard_data.json');
-                if (!response.ok) {
-                    console.error('Failed to load JSON:', response.statusText);
+                // Determine the base path - works for both local server and Netlify
+                const basePath = window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1') 
+                    ? window.location.origin 
+                    : window.location.origin;
+                
+                // Try multiple paths for the data file (optimized for Netlify and local servers)
+                const paths = [
+                    '/dashboard_data.json',           // Root path (Netlify friendly)
+                    './dashboard_data.json',          // Relative path
+                    'dashboard_data.json',            // Relative without ./
+                    basePath + '/dashboard_data.json' // Absolute path
+                ];
+                
+                let data = null;
+                let lastError = null;
+
+                for (const path of paths) {
+                    try {
+                        const response = await fetch(path, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        
+                        if (!response.ok) {
+                            lastError = `HTTP ${response.status}: ${response.statusText}`;
+                            continue;
+                        }
+                        
+                        const text = await response.text();
+                        
+                        // Check if we actually got JSON
+                        if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                            data = JSON.parse(text);
+                            console.log('✓ Successfully loaded data from:', path);
+                            break;
+                        } else {
+                            lastError = 'Response is not valid JSON (received HTML or text)';
+                        }
+                    } catch (error) {
+                        lastError = error.message;
+                        continue;
+                    }
+                }
+
+                if (data && data.customers && Array.isArray(data.customers)) {
+                    window.customersData = data.customers;
+                    console.log('✓ Data loaded successfully with', data.customers.length, 'customers');
+                    return true;
+                } else {
+                    console.error('✗ Failed to load or parse data:', lastError);
                     return false;
                 }
-                const data = await response.json();
-                if (data.customers && Array.isArray(data.customers)) {
-                    window.customersData = data.customers;
-                    return true;
-                }
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('✗ Error loading data:', error);
             }
             return false;
         }
