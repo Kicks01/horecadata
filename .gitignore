@@ -1,0 +1,42 @@
+# Large generated data files
+cities_areas_data.js
+dashboard_data.js
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Data files (uncomment if you don't want to commit CSV/JSON)
+# *.csv
+# *.json
+
+# Deployment artifacts
+deploy/
+
